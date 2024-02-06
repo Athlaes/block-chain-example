@@ -1,25 +1,20 @@
 package fr.ul.sid.wallet.transaction;
 
+import fr.ul.sid.utils.StringUtils;
+
 import java.security.PublicKey;
 
 public class TransactionOutput {
     public String id;
-    public PublicKey reveiver; // Nouveau propriétaire des fonds
-    public float value; // Montant des fonds
-    public String parentTransactionId; // ID de la transaction parente de cette sortie
+    public PublicKey reveiver;
+    public float value;
+    public String parentTransactionId;
 
-    // Constructeur
     public TransactionOutput(PublicKey reveiver, float value, String parentTransactionId) {
         this.reveiver = reveiver;
         this.value = value;
         this.parentTransactionId = parentTransactionId;
-        this.id = calculateHash();
-    }
-
-    // Calcule le hash de la transaction de sortie
-    private String calculateHash() {
-        // implémenter le calcul du hash
-        return "";
+        this.id = StringUtils.applySha256(this);
     }
 
     // Vérifie si la monnaie appartient à ce wallet

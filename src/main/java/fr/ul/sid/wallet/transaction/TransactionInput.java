@@ -1,13 +1,15 @@
 package fr.ul.sid.wallet.transaction;
 
+import fr.ul.sid.wallet.UTXO;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionInput {
-    public String transactionOutputId; // Référence à TransactionOutput -> transactionId
-    public List<TransactionOutput> UTXO; // Contient les UTXO non dépensés
+    public List<UTXO> UTXO;
 
-    // Constructeur
-    public TransactionInput(String transactionOutputId) {
-        this.transactionOutputId = transactionOutputId;
+    public TransactionInput(List<UTXO> utxos) {
+        this.UTXO = new ArrayList<>();
+        this.UTXO.addAll(utxos);
     }
 }
