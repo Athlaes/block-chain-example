@@ -22,13 +22,11 @@ public class Wallet {
 
     private void generateKeyPair() {
         try {
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("ECDSA","BC");
-            SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-            ECGenParameterSpec ecSpec = new ECGenParameterSpec("prime192v1");
-            keyGen.initialize(ecSpec, random);
-            KeyPair keyPair = keyGen.generateKeyPair();
-            privateKey = keyPair.getPrivate();
-            publicKey = keyPair.getPublic();
+            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+            generator.initialize(2048);
+            KeyPair pair = generator.generateKeyPair();
+            privateKey = pair.getPrivate();
+            publicKey = pair.getPublic();
         } catch(Exception e) {
             throw new RuntimeException(e);
         }
@@ -48,9 +46,7 @@ public class Wallet {
             System.out.println("#Pas assez de fonds pour envoyer la transaction. Transaction échouée.");
             return null;
         }
-
         List<UTXO> utxos = new ArrayList<>();
-
         float total = 0;
         for (UTXO utxo : this.utxos) {
             TransactionOutput transactionOutput = utxo.getTo();
@@ -59,19 +55,23 @@ public class Wallet {
             if (total >= value) break;
         }
         TransactionInput input = new TransactionInput(utxos);
-
-        Transaction newTransaction = new Transaction(this.publicKey, reveiver, value, input);
+        Transaction newTransaction = new Transaction(this.publicKey, reveiver, input);
+        TransactionOutput outputSend = new TransactionOutput(reveiver,value,newTransaction.getTransactionId());
+        newTransaction.addTransactionOutput(outputSend);
+        if (total>value){
+            TransactionOutput outputReceive = new TransactionOutput(this.publicKey,(total-value),newTransaction.getTransactionId());
+            newTransaction.addTransactionOutput(outputReceive);
+        }
         newTransaction.setSignature(SignUtils.generateSignature(this.privateKey, newTransaction));
-
         return newTransaction;
     }
-
     public PrivateKey getPrivateKey() {
         return privateKey;
     }
-
     public PublicKey getPublicKey() {
         return publicKey;
     }
-
+    public void setUtxos(List<UTXO> utxos) {
+        this.utxos = utxos;
+    }
 }

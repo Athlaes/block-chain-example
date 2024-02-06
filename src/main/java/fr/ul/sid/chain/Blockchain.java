@@ -5,11 +5,11 @@ import java.util.List;
 
 public class Blockchain {
     private List<Block> blockchain = new ArrayList<>();
-    private int difficulty = 5; // Ajustez la difficulté selon vos besoins
+    private int difficulty = 5;
 
     // Ajouter un bloc à la blockchain
     public void addBlock(Block newBlock) {
-        newBlock.mineBlock(difficulty);
+        newBlock.mine(difficulty);
         blockchain.add(newBlock);
     }
 
@@ -34,7 +34,7 @@ public class Blockchain {
                 return false;
             }
             // Vérifier si le hash a été miné
-            if(!currentBlock.getHash().substring( 0, difficulty).equals(hashTarget)) {
+            if(!currentBlock.isMined()) {
                 System.out.println("This block hasn't been mined");
                 return false;
             }

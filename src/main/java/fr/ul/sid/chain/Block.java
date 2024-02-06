@@ -13,12 +13,14 @@ public class Block {
     private List<Transaction> transactions = new ArrayList<Transaction>();
     private long timeStamp;
     private int nonce;
+    private boolean mined;
 
     // Constructeur du Bloc
     public Block(String previousHash ) {
         this.previousHash = previousHash;
         this.timeStamp = new Date().getTime();
         this.hash = calculateHash(); // Assurez-vous d'avoir cette méthode
+        this.mined = false;
     }
 
     // Calculer le hash du bloc
@@ -30,12 +32,13 @@ public class Block {
     }
 
     // Augmente nonce jusqu'à trouver le hash cible
-    public void mineBlock(int difficulty) {
+    public void mine(int difficulty) {
         String target = StringUtils.getDifficultyString(difficulty); // Crée une chaîne de difficulté (ex: avec difficulté 5 -> "00000")
         while(!hash.substring( 0, difficulty).equals(target)) {
             nonce ++;
             hash = calculateHash();
         }
+        setMined(true);
         System.out.println("Block Mined!!! : " + hash);
     }
 
@@ -92,6 +95,13 @@ public class Block {
 
     public void setNonce(int nonce) {
         this.nonce = nonce;
+    }
+
+    public boolean isMined() {
+        return mined;
+    }
+    public void setMined(boolean mined) {
+        this.mined = mined;
     }
 }
 
