@@ -16,9 +16,4 @@ public class TransactionOutput {
         this.parentTransactionId = parentTransactionId;
         this.id = StringUtils.applySha256(this);
     }
-
-    // Vérifie si la monnaie appartient à ce wallet
-    public boolean isMine(PublicKey publicKey) {
-        return (publicKey == this.reveiver);
-    }
 }
