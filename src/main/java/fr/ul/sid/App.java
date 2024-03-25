@@ -8,14 +8,10 @@ import fr.ul.sid.wallet.Wallet;
 import fr.ul.sid.wallet.transaction.Transaction;
 import fr.ul.sid.wallet.transaction.TransactionOutput;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -26,6 +22,8 @@ import java.util.logging.Logger;
 public class App 
 {
     private static final Logger logger = Logger.getLogger(App.class.getName());
+
+    private static final int delay = 1000 * 60 * 1;
     public static int difficulty = 2;
 
     private static final Wallet appWallet = new Wallet();
@@ -34,6 +32,8 @@ public class App
 
     private static final List<Wallet> wallets = new ArrayList<>();
     public static Blockchain blockchain;
+
+    private static Thread miningThread;
 
     public static Minage minage;
 
@@ -55,7 +55,7 @@ public class App
             }
         };
         Timer timer = new Timer();
-        timer.scheduleAtFixedRate(task, 0, 1000 * 60 * 2);
+        timer.scheduleAtFixedRate(task, App.delay, App.delay);
 
 
         System.out.println("Welcome to Blockchain CLI");
@@ -75,7 +75,9 @@ public class App
                             See available wallet keys [4]
                             Add new wallet [5]
                             Amount of coins in wallet [6]
-                            See how many blocks needs to be minded [7]
+                            See how many blocks needs to be mined [7]
+                            See balance of specific wallet [8]
+                            Activate automatic mining [9]
                             Quit [quit]
                             """);
         String input = s.nextLine();
@@ -92,8 +94,12 @@ public class App
                     if (Objects.nonNull(wallet)) {
                         Transaction transaction = appWallet.sendFunds(receiver, amount);
                         if (Objects.nonNull(transaction)) {
-                            App.blockchain.addTransaction(transaction);
-                            logger.info(() -> "Sent : " + amount);
+                            boolean res = App.blockchain.addTransaction(transaction);
+                            if (res) {
+                                logger.info(() -> "Sent : " + amount);
+                            } else {
+                                logger.info(() -> "Couldn't send amount");
+                            }
                         } else {
                             logger.warning(() -> "Montant supérieur au total du wallet");
                         }
@@ -108,7 +114,7 @@ public class App
             }
             case "3" -> {
                 Block blockMined = App.minage.mineBlock();
-                if(minage.isChainValid()) {
+                if(Objects.nonNull(blockMined) && minage.isChainValid()) {
                     App.blockchain.validateTransactions(blockMined);
                 }
             }
@@ -124,6 +130,31 @@ public class App
             case "5" -> App.wallets.add(new Wallet());
             case "6" -> System.out.println(App.appWallet.getBalance());
             case "7" -> System.out.println(App.blockchain.getBlockToMine().size());
+            case "8" -> {
+                System.out.println("Wallet key :");
+                String walletKey = s.nextLine();
+                try {
+                    PublicKey key = KeyUtils.deserializePublicKey(walletKey);
+                    if (Objects.nonNull(key)) {
+                        Wallet wallet = wallets.stream().filter(w -> w.getPublicKey().equals(key)).findFirst().orElse(null);
+                        System.out.println(wallet.getBalance());
+                    }
+                } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                    logger.severe(() -> "Impossible de désérialiser la clé publique ");
+                }
+            }
+            case "9" -> {
+                // Create new thread that constantly mine blocks
+                App.miningThread = new Thread(() -> {
+                    while (true) {
+                        Block blockMined = App.minage.mineBlock();
+                        if(Objects.nonNull(blockMined) && minage.isChainValid()) {
+                            App.blockchain.validateTransactions(blockMined);
+                        }
+                    }
+                });
+                App.miningThread.start();
+            }
             default -> System.out.println("Invalid input");
         }
 
@@ -136,14 +167,14 @@ public class App
         if (Objects.nonNull(inputWallet)) {
             transaction.getInput().getUtxo().forEach(w -> inputWallet.getUtxos().remove(w));
             // Create UTXO
-            Wallet outputWallet = wallets.stream().filter(w -> w.getPublicKey().equals(transaction.getReveiver())).findFirst().orElse(null);
             List<TransactionOutput> outputs = transaction.getOutputs();
-            if (Objects.nonNull(outputWallet)) {
-                for (TransactionOutput output : outputs) {
+            for (TransactionOutput output : outputs) {
+                Wallet outputWallet = wallets.stream().filter(w -> w.getPublicKey().equals(output.getReveiver())).findFirst().orElse(null);
+                if (Objects.nonNull(outputWallet)) {
                     outputWallet.addFound(transaction.getTransactionId(), output);
+                } else {
+                    logger.warning(() -> "Impossible de retrouver le wallet correspondant à cet output");
                 }
-            } else {
-                logger.warning(() -> "Impossible de retrouver le wallet correspondant à cet output");
             }
         } else {
             logger.warning(() -> "Impossible de retrouver le wallet correspondant aux inputs");

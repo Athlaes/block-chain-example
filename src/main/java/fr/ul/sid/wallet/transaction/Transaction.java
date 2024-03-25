@@ -12,16 +12,18 @@ import java.util.List;
 
 public class Transaction {
     @JsonIgnore
-    public String transactionId;
+    private String transactionId;
     @JsonDeserialize(using = PublicKeyDeserializer.class)
     @JsonSerialize(using = PublicKeySerializer.class)
-    public PublicKey sender;
+    private PublicKey sender;
     @JsonDeserialize(using = PublicKeyDeserializer.class)
     @JsonSerialize(using = PublicKeySerializer.class)
-    public PublicKey reveiver;
-    public byte[] signature;
-    public TransactionInput input;
-    public List<TransactionOutput> outputs = new ArrayList<>();
+    private PublicKey reveiver;
+
+    @JsonIgnore
+    private byte[] signature;
+    private TransactionInput input;
+    private List<TransactionOutput> outputs = new ArrayList<>();
 
     public Transaction () {}
 

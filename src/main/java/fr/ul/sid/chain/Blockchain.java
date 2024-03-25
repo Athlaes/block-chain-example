@@ -9,6 +9,7 @@ import fr.ul.sid.wallet.transaction.TransactionOutput;
 import java.security.PublicKey;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 
 public class Blockchain {
@@ -30,17 +31,21 @@ public class Blockchain {
         transaction.addOutput(output);
 
         this.currentBlock.addTransaction(transaction);
+        this.currentBlock.setPreviousHash("First block");
         this.nextBlock();
         Block block = App.minage.mineBlock();
         this.validateTransactions(block);
     }
 
-    public void addTransaction(Transaction transaction) {
-        if(SignUtils.checkSignature(transaction.sender, transaction, transaction.signature)) {
+    public boolean addTransaction(Transaction transaction) {
+        if(SignUtils.checkSignature(transaction.getSender(), transaction, transaction.getSignature())) {
             currentBlock.addTransaction(transaction);
         } else {
             logger.warning("Invalid transaction added to blockchain");
+            return false;
         }
+
+        return true;
     }
 
     public void nextBlock() {
@@ -76,6 +81,11 @@ public class Blockchain {
             }
         }
         this.blockToMine.remove(blockToRemove);
+        try {
+            this.blockToMine.getFirst().setPreviousHash(blockToRemove.getHash());
+        } catch (NoSuchElementException e) {
+            this.currentBlock.setPreviousHash(blockToRemove.getHash());
+        }
         this.blockchain.add(blockToRemove);
     }
 }

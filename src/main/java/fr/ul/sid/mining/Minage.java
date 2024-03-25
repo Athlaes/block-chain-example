@@ -27,6 +27,10 @@ public class Minage {
 
     public Block mineBlock() {
         Block newBlock = blockchain.getBlockToMine().getFirst();
+        if (Objects.isNull(newBlock.getPreviousHash())) {
+            logger.severe(() -> "Impossible de miner le block tant que le précédédant block n'a pas été miné ");
+            return null;
+        }
         executeProofOfWork(newBlock);
         return newBlock;
     }

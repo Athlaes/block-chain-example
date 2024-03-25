@@ -21,7 +21,7 @@ public class SignUtils {
         }
     }
 
-    public static boolean checkSignature(PublicKey pubk,Object toSign, byte[] sign) {
+    public static boolean checkSignature(PublicKey pubk, Object toSign, byte[] sign) {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initVerify(pubk);

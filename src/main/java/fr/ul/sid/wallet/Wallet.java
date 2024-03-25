@@ -74,8 +74,8 @@ public class Wallet {
             newTransaction.addOutput(new TransactionOutput(this.publicKey, total-value));
         }
 
-        newTransaction.setSignature(SignUtils.generateSignature(this.privateKey, newTransaction));
         newTransaction.setTransactionId(StringUtils.applySha256(newTransaction));
+        newTransaction.setSignature(SignUtils.generateSignature(this.privateKey, newTransaction));
 
         return newTransaction;
     }
