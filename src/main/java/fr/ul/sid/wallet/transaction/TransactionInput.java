@@ -6,10 +6,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionInput {
-    public List<UTXO> UTXO;
+    private List<UTXO> utxo;
+
+    public TransactionInput() {}
 
     public TransactionInput(List<UTXO> utxos) {
-        this.UTXO = new ArrayList<>();
-        this.UTXO.addAll(utxos);
+        this.utxo = new ArrayList<>();
+        this.utxo.addAll(utxos);
+    }
+
+    public List<UTXO> getUtxo() {
+        return utxo;
+    }
+
+    public void setUtxo(List<UTXO> utxo) {
+        this.utxo = utxo;
     }
 }

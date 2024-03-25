@@ -1,29 +1,74 @@
 package fr.ul.sid.mining;
 
+import fr.ul.sid.App;
 import fr.ul.sid.chain.Block;
 import fr.ul.sid.chain.Blockchain;
 import fr.ul.sid.utils.StringUtils;
-import fr.ul.sid.wallet.transaction.Transaction;
 
-import java.util.List;
+import java.util.Objects;
+import java.util.logging.Logger;
 
 public class Minage {
+    private static final Logger logger = Logger.getLogger(Minage.class.getName());
 
-    private Blockchain blockchain;
-    private int difficulty;
+    private static Minage instance;
+    private final Blockchain blockchain;
 
-    public Minage(Blockchain blockchain, int difficulty) {
+    private  Minage(Blockchain blockchain) {
         this.blockchain = blockchain;
-        this.difficulty = difficulty;
     }
 
-    public Block mineBlock(List<Transaction> transactions) {
-        Block newBlock = new Block(blockchain.getLatestBlock().getHash());
-        for(Transaction transaction : transactions) {
-            newBlock.addTransaction(transaction);
+    public static Minage getInstance() {
+        if(Objects.isNull(instance)) {
+            instance = new Minage(App.blockchain);
         }
-        newBlock.mine(difficulty);
-        blockchain.addBlock(newBlock);
+         return instance;
+    }
+
+    public Block mineBlock() {
+        Block newBlock = blockchain.getBlockToMine().getFirst();
+        executeProofOfWork(newBlock);
         return newBlock;
+    }
+
+    public boolean isChainValid() {
+        for(int i=1; i < blockchain.getBlockchain().size(); i++) {
+            if(!isBlockValid(blockchain.getBlockchain().get(i), blockchain.getBlockchain().get(i-1))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public boolean isBlockValid(Block block, Block previousBlock) {
+        String hashTarget = new String(new char[App.difficulty]).replace('\0', '0');
+
+        if(!block.getHash().equals(StringUtils.applySha256(block)) ){
+            logger.warning("A block hash couldn't be verified");
+            return false;
+        }
+        if(!previousBlock.getHash().equals(block.getPreviousHash()) ) {
+            logger.warning("Previous block hash doesn't equal current block previous hash");
+            return false;
+        }
+        if(!block.getHash().substring( 0, App.difficulty).equals(hashTarget)) {
+            logger.warning("This block hasn't been mined");
+            return false;
+        }
+
+        return true;
+    }
+
+    private void executeProofOfWork(Block block) {
+        String target = StringUtils.getDifficultyString(App.difficulty);
+        block.setHash(StringUtils.applySha256(block));
+
+        while(!block.getHash().substring(0, App.difficulty).equals(target)) {
+            block.setNonce(block.getNonce()+1);
+            block.setHash(StringUtils.applySha256(block));
+        }
+
+        logger.info(() -> "Block Mined ! Hash found : " + block.getHash());
     }
 }

@@ -1,49 +1,81 @@
 package fr.ul.sid.chain;
 
-import java.util.ArrayList;
+import fr.ul.sid.App;
+import fr.ul.sid.utils.SignUtils;
+import fr.ul.sid.wallet.transaction.Transaction;
+import fr.ul.sid.wallet.transaction.TransactionInput;
+import fr.ul.sid.wallet.transaction.TransactionOutput;
+
+import java.security.PublicKey;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class Blockchain {
-    private List<Block> blockchain = new ArrayList<>();
-    private int difficulty = 5;
+    private static final Logger logger = Logger.getLogger(Blockchain.class.getName());
 
-    // Ajouter un bloc à la blockchain
-    public void addBlock(Block newBlock) {
-        newBlock.mine(difficulty);
-        blockchain.add(newBlock);
+    private Block currentBlock;
+
+    private List<Block> blockToMine = new LinkedList<>();
+    private List<Block> blockchain = new LinkedList<>();
+
+    public Blockchain() {
+        currentBlock = new Block();
     }
 
-    // Vérifier l'intégrité de la blockchain
-    public boolean isChainValid() {
-        Block currentBlock;
-        Block previousBlock;
-        String hashTarget = new String(new char[difficulty]).replace('\0', '0');
+    public void initBlockchain(PublicKey wallet, float amount) {
+        TransactionInput transactionInput = new TransactionInput(List.of());
+        Transaction transaction = new Transaction(wallet, wallet, transactionInput);
+        TransactionOutput output = new TransactionOutput(wallet, amount);
+        transaction.addOutput(output);
 
-        // Boucle à travers la blockchain pour vérifier les hashes
-        for(int i=1; i < blockchain.size(); i++) {
-            currentBlock = blockchain.get(i);
-            previousBlock = blockchain.get(i-1);
-            // Comparer le hash enregistré et le hash calculé
-            if(!currentBlock.getHash().equals(currentBlock.calculateHash()) ){
-                System.out.println("Current Hashes not equal");
-                return false;
-            }
-            // Comparer le hash précédent avec le hash enregistré dans le bloc actuel
-            if(!previousBlock.getPreviousHash().equals(currentBlock.getPreviousHash()) ) {
-                System.out.println("Previous Hashes not equal");
-                return false;
-            }
-            // Vérifier si le hash a été miné
-            if(!currentBlock.isMined()) {
-                System.out.println("This block hasn't been mined");
-                return false;
+        this.currentBlock.addTransaction(transaction);
+        this.nextBlock();
+        Block block = App.minage.mineBlock();
+        this.validateTransactions(block);
+    }
+
+    public void addTransaction(Transaction transaction) {
+        if(SignUtils.checkSignature(transaction.sender, transaction, transaction.signature)) {
+            currentBlock.addTransaction(transaction);
+        } else {
+            logger.warning("Invalid transaction added to blockchain");
+        }
+    }
+
+    public void nextBlock() {
+        Block newBlock = new Block(currentBlock.getHash());
+        blockToMine.add(currentBlock);
+        currentBlock = newBlock;
+    }
+
+    public List<Block> getBlockchain() {
+        return blockchain;
+    }
+
+    public Block getCurrentBlock() {
+        return currentBlock;
+    }
+
+    public void setCurrentBlock(Block currentBlock) {
+        this.currentBlock = currentBlock;
+    }
+
+    public List<Block> getBlockToMine() {
+        return blockToMine;
+    }
+
+    public void setBlockToMine(List<Block> blockToMine) {
+        this.blockToMine = blockToMine;
+    }
+
+    public void validateTransactions(Block blockToRemove) {
+        for(Block block : blockToMine) {
+            for(Transaction transaction : block.getTransactions()) {
+                App.processTransaction(transaction);
             }
         }
-        return true;
-    }
-
-
-    public Block getLatestBlock() {
-        return this.blockchain.getLast();
+        this.blockToMine.remove(blockToRemove);
+        this.blockchain.add(blockToRemove);
     }
 }

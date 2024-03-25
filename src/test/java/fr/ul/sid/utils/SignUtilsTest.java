@@ -34,8 +34,8 @@ public class SignUtilsTest {
     @DisplayName("test de vérification de signature")
     void testVerifySignatureok(){
         byte[] signature = SignUtils.generateSignature(this.walletOne.getPrivateKey(),this.message);
-        boolean verifiedOne = SignUtils.checkSignature(this.walletOne.getPublicKey(),this.message,signature);
-        boolean verifiedTwo = SignUtils.checkSignature(this.walletTwo.getPublicKey(),this.message,signature);
+        boolean verifiedOne = SignUtils.checkSignature(this.walletOne.getPublicKey(), this.message, signature);
+        boolean verifiedTwo = SignUtils.checkSignature(this.walletTwo.getPublicKey(), this.message, signature);
         assertEquals(verifiedOne,true);
         assertEquals(verifiedTwo,false);
     }

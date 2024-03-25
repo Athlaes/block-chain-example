@@ -1,60 +1,33 @@
 package fr.ul.sid.chain;
 
-import fr.ul.sid.utils.StringUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import fr.ul.sid.wallet.transaction.Transaction;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class Block {
+    private static final Logger logger = Logger.getLogger(Block.class.getName());
+    @JsonIgnore
     private String hash;
     private String previousHash;
-    private List<Transaction> transactions = new ArrayList<Transaction>();
+    private List<Transaction> transactions = new ArrayList<>();
     private long timeStamp;
     private int nonce;
-    private boolean mined;
 
-    // Constructeur du Bloc
-    public Block(String previousHash ) {
+    public Block() {
+        this.timeStamp = new Date().getTime();
+    }
+
+    public Block(String previousHash) {
         this.previousHash = previousHash;
         this.timeStamp = new Date().getTime();
-        this.hash = calculateHash(); // Assurez-vous d'avoir cette méthode
-        this.mined = false;
     }
 
-    // Calculer le hash du bloc
-    public String calculateHash() {
-        String calculatedhash = StringUtils.applySha256(
-                previousHash + Long.toString(timeStamp) + Integer.toString(nonce)
-        );
-        return calculatedhash;
-    }
-
-    // Augmente nonce jusqu'à trouver le hash cible
-    public void mine(int difficulty) {
-        String target = StringUtils.getDifficultyString(difficulty); // Crée une chaîne de difficulté (ex: avec difficulté 5 -> "00000")
-        while(!hash.substring( 0, difficulty).equals(target)) {
-            nonce ++;
-            hash = calculateHash();
-        }
-        setMined(true);
-        System.out.println("Block Mined!!! : " + hash);
-    }
-
-    // Ajoute des transactions au bloc
-    public boolean addTransaction(Transaction transaction) {
-        // process transaction and check if valid, unless block is genesis block then ignore.
-        if(transaction == null) return false;
-        if((!"0".equals(previousHash))) {
-            if((!transaction.processTransaction())) {
-                System.out.println("Transaction failed to process. Discarded.");
-                return false;
-            }
-        }
-        transactions.add(transaction);
-        System.out.println("Transaction Successfully added to Block");
-        return true;
+    public void addTransaction(Transaction transaction) {
+        this.transactions.add(transaction);
     }
 
     public String getHash() {
@@ -95,13 +68,6 @@ public class Block {
 
     public void setNonce(int nonce) {
         this.nonce = nonce;
-    }
-
-    public boolean isMined() {
-        return mined;
-    }
-    public void setMined(boolean mined) {
-        this.mined = mined;
     }
 }
 
