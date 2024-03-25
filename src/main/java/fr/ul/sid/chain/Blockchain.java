@@ -26,14 +26,14 @@ public class Blockchain {
 
     public void initBlockchain(PublicKey wallet, float amount) {
         TransactionInput transactionInput = new TransactionInput(List.of());
-        Transaction transaction = new Transaction(wallet, wallet, transactionInput);
+        Transaction transaction = new Transaction(App.coinbaseFakeWallet.getPublicKey(), wallet, transactionInput);
         TransactionOutput output = new TransactionOutput(wallet, amount);
         transaction.addOutput(output);
 
         this.currentBlock.addTransaction(transaction);
         this.currentBlock.setPreviousHash("First block");
         this.nextBlock();
-        Block block = App.minage.mineBlock();
+        Block block = App.minage.mineBlock(wallet);
         this.validateTransactions(block);
     }
 

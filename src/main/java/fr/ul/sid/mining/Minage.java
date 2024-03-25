@@ -4,6 +4,9 @@ import fr.ul.sid.App;
 import fr.ul.sid.chain.Block;
 import fr.ul.sid.chain.Blockchain;
 import fr.ul.sid.utils.StringUtils;
+import fr.ul.sid.wallet.transaction.Transaction;
+import fr.ul.sid.wallet.transaction.TransactionInput;
+import fr.ul.sid.wallet.transaction.TransactionOutput;
 
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -31,6 +34,13 @@ public class Minage {
             logger.severe(() -> "Impossible de miner le block tant que le précédédant block n'a pas été miné ");
             return null;
         }
+        TransactionInput transactionInput = new TransactionInput(List.of());
+        Transaction transaction = new Transaction(App.coinbaseFakeWallet.getPublicKey(), miner, transactionInput);
+        TransactionOutput output = new TransactionOutput(miner, App.coinbase);
+        transaction.addOutput(output);
+
+        newBlock.setMiner(miner);
+        newBlock.addTransaction(transaction);
         executeProofOfWork(newBlock);
         return newBlock;
     }

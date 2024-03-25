@@ -23,8 +23,10 @@ public class App
 {
     private static final Logger logger = Logger.getLogger(App.class.getName());
 
-    private static final int delay = 1000 * 60 * 1;
-    public static int difficulty = 2;
+    private static final int delay = 1000 * 60 * 3;
+    public static int difficulty = 5;
+
+    public static final int coinbase = 8;
 
     private static final Wallet appWallet = new Wallet();
 
@@ -33,7 +35,9 @@ public class App
     private static final List<Wallet> wallets = new ArrayList<>();
     public static Blockchain blockchain;
 
-    private static Thread miningThread;
+    public static final Wallet coinbaseFakeWallet = new Wallet();
+
+    private static Timer miningTimer;
 
     public static Minage minage;
 
@@ -44,6 +48,7 @@ public class App
         App.minage = Minage.getInstance();
 
         wallets.add(App.appWallet);
+        wallets.add(App.coinbaseFakeWallet);
 
         App.blockchain.initBlockchain(App.appWallet.getPublicKey(), 10000);
 
@@ -144,16 +149,20 @@ public class App
                 }
             }
             case "9" -> {
-                // Create new thread that constantly mine blocks
-                App.miningThread = new Thread(() -> {
-                    while (true) {
-                        Block blockMined = App.minage.mineBlock();
-                        if(Objects.nonNull(blockMined) && minage.isChainValid()) {
-                            App.blockchain.validateTransactions(blockMined);
-                        }
+                TimerTask task = new TimerTask() {
+                    @Override
+                    public void run() {
+                        try {
+                            Block blockMined = App.minage.mineBlock(App.appWallet.getPublicKey());
+                            if(Objects.nonNull(blockMined) && minage.isChainValid()) {
+                                App.blockchain.validateTransactions(blockMined);
+                            }
+                        } catch (NoSuchElementException e) {}
                     }
-                });
-                App.miningThread.start();
+                };
+                App.miningTimer = new Timer();
+                App.miningTimer.scheduleAtFixedRate(task, 0, 1000 * 5);
+                System.out.println("Automatic mining activated");
             }
             default -> System.out.println("Invalid input");
         }

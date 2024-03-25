@@ -1,6 +1,11 @@
 package fr.ul.sid.chain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import fr.ul.sid.App;
+import fr.ul.sid.serialization.PublicKeyDeserializer;
+import fr.ul.sid.serialization.PublicKeySerializer;
 import fr.ul.sid.wallet.transaction.Transaction;
 
 import java.util.ArrayList;
