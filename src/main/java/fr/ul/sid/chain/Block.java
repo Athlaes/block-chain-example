@@ -8,6 +8,7 @@ import fr.ul.sid.serialization.PublicKeyDeserializer;
 import fr.ul.sid.serialization.PublicKeySerializer;
 import fr.ul.sid.wallet.transaction.Transaction;
 
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -21,6 +22,10 @@ public class Block {
     private List<Transaction> transactions = new ArrayList<>();
     private long timeStamp;
     private int nonce;
+    private final int coinbase = App.coinbase;
+    @JsonDeserialize(using = PublicKeyDeserializer.class)
+    @JsonSerialize(using = PublicKeySerializer.class)
+    private PublicKey miner;
 
     public Block() {
         this.timeStamp = new Date().getTime();
@@ -73,6 +78,16 @@ public class Block {
 
     public void setNonce(int nonce) {
         this.nonce = nonce;
+    }
+    public PublicKey getMiner(){
+        return this.miner;
+    }
+    public void setMiner(PublicKey miner){
+        this.miner = miner;
+    }
+
+    public int getCoinbase() {
+        return coinbase;
     }
 }
 

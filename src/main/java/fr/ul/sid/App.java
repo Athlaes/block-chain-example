@@ -118,7 +118,7 @@ public class App
                 }
             }
             case "3" -> {
-                Block blockMined = App.minage.mineBlock();
+                Block blockMined = App.minage.mineBlock(App.appWallet.getPublicKey());
                 if(Objects.nonNull(blockMined) && minage.isChainValid()) {
                     App.blockchain.validateTransactions(blockMined);
                 }

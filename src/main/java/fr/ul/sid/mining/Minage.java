@@ -8,6 +8,8 @@ import fr.ul.sid.wallet.transaction.Transaction;
 import fr.ul.sid.wallet.transaction.TransactionInput;
 import fr.ul.sid.wallet.transaction.TransactionOutput;
 
+import java.security.PublicKey;
+import java.util.List;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -28,8 +30,9 @@ public class Minage {
          return instance;
     }
 
-    public Block mineBlock() {
+    public Block mineBlock(PublicKey miner) {
         Block newBlock = blockchain.getBlockToMine().getFirst();
+        logger.info(() -> "Mining block ...");
         if (Objects.isNull(newBlock.getPreviousHash())) {
             logger.severe(() -> "Impossible de miner le block tant que le précédédant block n'a pas été miné ");
             return null;
@@ -82,7 +85,6 @@ public class Minage {
             block.setNonce(block.getNonce()+1);
             block.setHash(StringUtils.applySha256(block));
         }
-
         logger.info(() -> "Block Mined ! Hash found : " + block.getHash());
     }
 }
